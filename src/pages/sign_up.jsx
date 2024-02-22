@@ -3,17 +3,55 @@ import { ClipLoader } from "react-spinners";
 import AuthInfo from "../components/auth/auth_info";
 import { Link } from "react-router-dom";
 import { Input } from "../components/auth/input";
-import { getName } from "../helper";
+import { getName } from "../utils/helper";
+import {
+  createAuthUserWithEmailAndPassword,
+  createUserDocumentFromAuth,
+} from "../utils/firebase/firebase.utils";
 
 const defaultValue = {
+  username: "",
   email_address: "",
   password: "",
   confirm_password: "",
 };
 
 const SignUp = () => {
-  const [loading, setloading] = useState(false);
+  const [state, setstate] = useState("unloaded");
   const [formField, setFormField] = useState(defaultValue);
+
+  const resetFormFields = () => {
+    setFormField(defaultValue);
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setstate("loading");
+    const { email_address, password, confirm_password, username } = formField;
+
+    if (password !== confirm_password) {
+      alert("passwords do not match");
+      return;
+    }
+
+    try {
+      const { user } = await createAuthUserWithEmailAndPassword(
+        email_address,
+        password
+      );
+
+      await createUserDocumentFromAuth(user, { username });
+      resetFormFields();
+    } catch (error) {
+      if (error.code === "auth/email-already-in-use") {
+        alert("Cannot create user, email already in use");
+      } else {
+        console.log("user creation encountered an error", error);
+      }
+    }
+
+    setstate("loaded");
+  };
 
   return (
     <div className="flex min-h-full ">
@@ -42,17 +80,16 @@ const SignUp = () => {
         </p>
 
         <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm lg:max-w-[80%]">
-          <form
-            className="space-y-6"
-            onSubmit={(e) => {
-              e.preventDefault();
-            }}
-          >
+          <form className="space-y-6" onSubmit={handleSubmit}>
             {Object.keys(formField).map((key) => {
               return (
                 <Input
                   name={getName(key)}
-                  type={key == "password" ? "password" : "text"}
+                  type={
+                    key == "password" || key == "confirm_password"
+                      ? "password"
+                      : "text"
+                  }
                   value={formField[key]}
                   placeholder={getName(key)}
                   onChange={(e) => {
@@ -70,7 +107,7 @@ const SignUp = () => {
                 onClick={(e) => signuppost(e)}
                 className="flex w-full justify-center rounded-md bg-[#00D871] px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-[#00d870c8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00d870c8]"
               >
-                {loading ? (
+                {state == "loading" ? (
                   <ClipLoader size={20} color="#fff" className="text-white" />
                 ) : (
                   "Sign Up"
@@ -81,7 +118,7 @@ const SignUp = () => {
             <div className="relative flex gap-x-3">
               <div className="flex h-6 items-center">
                 <input
-                  id="comments"
+                
                   name="comments"
                   type="checkbox"
                   className="h-4 w-4 rounded border-gray-300 "
@@ -97,7 +134,7 @@ const SignUp = () => {
             <div className="relative flex gap-x-3">
               <div className="flex h-6 items-center">
                 <input
-                  id="comments"
+                
                   name="comments"
                   type="checkbox"
                   className="h-4 w-4 rounded border-gray-300 "
