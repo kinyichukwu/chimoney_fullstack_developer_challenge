@@ -6,28 +6,19 @@ import TableCell from "@mui/material/TableCell";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Title from "./Title";
-
-// Generate Order Data
-function createData(id, date, name, amount) {
-  return { id, date, name, amount };
-}
-
-const rows = [
-  createData(0, "16 Mar, 2019", "Elvis Presley", 312.44),
-  createData(1, "16 Mar, 2019", "Paul McCartney", 866.99),
-  createData(2, "16 Mar, 2019", "Tom Scholz", 100.81),
-  createData(3, "16 Mar, 2019", "Michael Jackson", 654.39),
-  createData(4, "15 Mar, 2019", "Bruce Springsteen", 212.79),
-];
+import { UserContext } from "../../contexts/user.context";
 
 function preventDefault(event) {
   event.preventDefault();
 }
 
 export default function Orders() {
+  const { userDetails } = React.useContext(UserContext);
+
+  console.log(userDetails?.transactions, "trans");
   return (
     <React.Fragment>
-      <Title>Recent Orders</Title>
+      <Title>Transaction History</Title>
       <Table size="small">
         <TableHead>
           <TableRow>
@@ -37,16 +28,22 @@ export default function Orders() {
           </TableRow>
         </TableHead>
         <TableBody>
-          {rows.map((row) => (
-            <TableRow key={row.id}>
-              <TableCell>{row.date}</TableCell>
-              <TableCell>{row.name}</TableCell>
-              <TableCell>{`$${row.amount}`}</TableCell>
-            </TableRow>
-          ))}
+          {userDetails?.transactions &&
+            [...userDetails?.transactions]?.reverse()?.map((row, i) => (
+              <TableRow key={i}>
+                <TableCell>
+                  {row.date?.seconds
+                    ? new Date(row.date?.seconds * 1000).toDateString()
+                    : new Date(row.date).toDateString()}
+                </TableCell>
+                <TableCell>{row.name}</TableCell>
+                <TableCell style={{ color: row.amount < 0 && "red" }}>{`${
+                  row.amount > 0 ? "$" + row.amount : "-$" + row.amount
+                }`}</TableCell>
+              </TableRow>
+            ))}
         </TableBody>
       </Table>
-   
     </React.Fragment>
   );
 }

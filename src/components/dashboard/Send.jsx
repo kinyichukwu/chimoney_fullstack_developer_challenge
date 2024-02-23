@@ -1,9 +1,12 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import Title from "./Title";
 import { Input } from "../auth/input";
 import { getName } from "../../utils/helper";
+import { ClipLoader } from "react-spinners";
+import { UserContext } from "../../contexts/user.context";
+import { internalTransfer } from "../../utils/firebase/firebase.utils";
 
 function preventDefault(event) {
   event.preventDefault();
@@ -11,11 +14,13 @@ function preventDefault(event) {
 
 const defaultValue = {
   transfer_amount: "",
+  user_details: "",
 };
 
 const Send = () => {
   const [formField, setFormField] = useState(defaultValue);
   const [state, setstate] = useState("unloaded");
+  const { currentUser, setUserDetails } = useContext(UserContext);
 
   return (
     <React.Fragment>
@@ -30,7 +35,11 @@ const Send = () => {
                 : "text"
             }
             value={formField[key]}
-            placeholder={"Input users name or email address"}
+            placeholder={
+              key == "transfer_amount"
+                ? "Input amount in USD"
+                : "Input users name or email address"
+            }
             onChange={(e) => {
               setFormField((prev) => ({
                 ...prev,
@@ -47,9 +56,32 @@ const Send = () => {
         {state == "loading" ? (
           <ClipLoader color="#00D871" loading={true} size={30} />
         ) : (
-          <Link color="#00D871" href="#" onClick={preventDefault}>
-            Transfer
-          </Link>
+          <div className="flex flex-col gap-5 justify-between">
+            <Link
+              color="#00D871"
+              href="#"
+              onClick={(e) => {
+                preventDefault(e);
+                internalTransfer(
+                  currentUser,
+                  setUserDetails,
+                  formField.user_details,
+                  formField.transfer_amount,
+                  setstate,
+                  defaultValue,
+                  setFormField
+                );
+              }}
+              style={{
+                marginRight: "auto",
+              }}
+            >
+              Transfer to user
+            </Link>
+            <Link color="#00D871" href="#" onClick={preventDefault}>
+              Transfer to chimoney
+            </Link>
+          </div>
         )}
       </div>
     </React.Fragment>

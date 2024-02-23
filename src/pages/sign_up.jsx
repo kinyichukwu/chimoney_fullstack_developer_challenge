@@ -34,13 +34,17 @@ const SignUp = () => {
       return;
     }
 
+    if (password.length < 8) {
+      alert("Please input a longer password (8+)");
+    }
+
     try {
       const { user } = await createAuthUserWithEmailAndPassword(
         email_address,
         password
       );
 
-      await createUserDocumentFromAuth(user, { username });
+      await createUserDocumentFromAuth(user, { username }, username);
       resetFormFields();
     } catch (error) {
       if (error.code === "auth/email-already-in-use") {
@@ -118,7 +122,6 @@ const SignUp = () => {
             <div className="relative flex gap-x-3">
               <div className="flex h-6 items-center">
                 <input
-                
                   name="comments"
                   type="checkbox"
                   className="h-4 w-4 rounded border-gray-300 "
@@ -134,7 +137,6 @@ const SignUp = () => {
             <div className="relative flex gap-x-3">
               <div className="flex h-6 items-center">
                 <input
-                
                   name="comments"
                   type="checkbox"
                   className="h-4 w-4 rounded border-gray-300 "

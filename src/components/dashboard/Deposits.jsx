@@ -1,25 +1,29 @@
-import * as React from "react";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import Title from "./Title";
+import { Fragment, useContext } from "react";
+import { UserContext } from "../../contexts/user.context";
+import { BeatLoader } from "react-spinners";
 
 function preventDefault(event) {
   event.preventDefault();
 }
 
 export default function Deposits({}) {
+  const { userDetails } = useContext(UserContext);
   return (
-    <React.Fragment>
+    <Fragment>
       <Title>Wallet</Title>
       <Typography component="p" variant="h4" sx={{ flex: 1 }}>
-        $3,024.00
+        {" "}
+        {userDetails?.balance ? (
+          " $" + userDetails?.balance?.toLocaleString() + ".00"
+        ) : (
+          <BeatLoader size={20} color={"#00D871"} />
+        )}
       </Typography>
 
-      <div>
-        <Link color="#00D871" href="#" onClick={preventDefault}>
-          View balance
-        </Link>
-      </div>
-    </React.Fragment>
+     
+    </Fragment>
   );
 }

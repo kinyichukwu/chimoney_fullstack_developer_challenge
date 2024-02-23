@@ -22,8 +22,7 @@ import Deposits from "../components/dashboard/Deposits";
 import Orders from "../components/dashboard/Orders";
 import Fund from "../components/dashboard/Fund";
 import Send from "../components/dashboard/Send";
-
-
+import { UserContext } from "../contexts/user.context";
 
 const drawerWidth = 240;
 
@@ -75,7 +74,8 @@ const Drawer = styled(MuiDrawer, {
 const defaultTheme = createTheme();
 
 export default function Dashboard() {
-  const [open, setOpen] = React.useState(true);
+  const [open, setOpen] = React.useState(false);
+  const { userDetails } = React.useContext(UserContext);
   const toggleDrawer = () => {
     setOpen(!open);
   };
@@ -110,8 +110,9 @@ export default function Dashboard() {
               noWrap
               sx={{ flexGrow: 1 }}
             >
-              Dashboard
+              Welcome, {userDetails?.username || "" + "."}
             </Typography>
+
             <IconButton color="inherit">
               <Badge badgeContent={4} color="primary">
                 <NotificationsIcon />
@@ -152,18 +153,6 @@ export default function Dashboard() {
           <Toolbar />
           <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
             <Grid container spacing={3}>
-              <Grid item xs={12} md={4} lg={4}>
-                <Paper
-                  sx={{
-                    p: 2,
-                    display: "flex",
-                    flexDirection: "column",
-                    height: 240,
-                  }}
-                >
-                  <Deposits />
-                </Paper>
-              </Grid>
               {/* Recent Deposits */}
               <Grid item xs={12} md={4} lg={4}>
                 <Paper
@@ -171,12 +160,26 @@ export default function Dashboard() {
                     p: 2,
                     display: "flex",
                     flexDirection: "column",
-                    height: 240,
+                    height: 300,
                   }}
                 >
                   <Fund />
                 </Paper>
               </Grid>
+
+              <Grid item xs={12} md={4} lg={4}>
+                <Paper
+                  sx={{
+                    p: 2,
+                    display: "flex",
+                    flexDirection: "column",
+                    height: 220,
+                  }}
+                >
+                  <Deposits />
+                </Paper>
+              </Grid>
+
               {/* Recent Deposits */}
               <Grid item xs={12} md={4} lg={4}>
                 <Paper
@@ -184,7 +187,7 @@ export default function Dashboard() {
                     p: 2,
                     display: "flex",
                     flexDirection: "column",
-                    height: 240,
+                    height: 300,
                   }}
                 >
                   <Send />
@@ -198,7 +201,6 @@ export default function Dashboard() {
                 </Paper>
               </Grid>
             </Grid>
-          
           </Container>
         </Box>
       </Box>

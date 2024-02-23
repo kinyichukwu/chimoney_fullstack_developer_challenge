@@ -1,8 +1,6 @@
 import { initializeApp } from "firebase/app";
 import {
   getAuth,
-  signInWithRedirect,
-  signInWithPopup,
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -18,6 +16,15 @@ import {
   writeBatch,
   query,
   getDocs,
+  updateDoc,
+  arrayUnion,
+  Timestamp,
+  where,
+  onSnapshot,
+  deleteDoc,
+  FieldValue,
+  Firestore,
+  increment,
 } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -38,71 +45,8 @@ googleProvider.setCustomParameters({
 });
 
 export const auth = getAuth();
-export const signInWithGooglePopup = () =>
-  signInWithPopup(auth, googleProvider);
-export const signInWithGoogleRedirect = () =>
-  signInWithRedirect(auth, googleProvider);
 
 export const db = getFirestore();
-
-export const addCollectionAndDocuments = async (
-  collectionKey,
-  objectsToAdd,
-  field
-) => {
-  const collectionRef = collection(db, collectionKey);
-  const batch = writeBatch(db);
-
-  objectsToAdd.forEach((object) => {
-    const docRef = doc(collectionRef, object.title.toLowerCase());
-    batch.set(docRef, object);
-  });
-
-  await batch.commit();
-  console.log("done");
-};
-
-export const getCategoriesAndDocuments = async () => {
-  const collectionRef = collection(db, "categories");
-  const q = query(collectionRef);
-
-  const querySnapshot = await getDocs(q);
-  const categoryMap = querySnapshot.docs.reduce((acc, docSnapshot) => {
-    const { title, items } = docSnapshot.data();
-    acc[title.toLowerCase()] = items;
-    return acc;
-  }, {});
-
-  return categoryMap;
-};
-
-export const createUserDocumentFromAuth = async (
-  userAuth,
-  additionalInformation = {}
-) => {
-  if (!userAuth) return;
-
-  const userDocRef = doc(db, "users", userAuth.uid);
-
-  const userSnapshot = await getDoc(userDocRef);
-
-  if (!userSnapshot.exists()) {
-    const { email } = userAuth;
-    const createdAt = new Date();
-
-    try {
-      await setDoc(userDocRef, {
-        email,
-        createdAt,
-        ...additionalInformation,
-      });
-    } catch (error) {
-      console.log("error creating the user", error.message);
-    }
-  }
-
-  return userDocRef;
-};
 
 export const createAuthUserWithEmailAndPassword = async (email, password) => {
   if (!email || !password) return;
@@ -120,3 +64,263 @@ export const signOutUser = async () => await signOut(auth);
 
 export const onAuthStateChangedListener = (callback) =>
   onAuthStateChanged(auth, callback);
+
+// create user details
+export const createUserDocumentFromAuth = async (
+  userAuth,
+  additionalInformation = {},
+  username
+) => {
+  if (!userAuth) return;
+
+  const userDocRef = doc(db, "users", userAuth.uid);
+
+  const userSnapshot = await getDoc(userDocRef);
+  console.log(additionalInformation, "user created");
+
+  if (!userSnapshot.exists()) {
+    const { email } = userAuth;
+    const createdAt = new Date();
+
+    try {
+      await setDoc(userDocRef, {
+        email,
+        createdAt,
+        ...additionalInformation,
+        balance: 0,
+        transactions: [],
+        uid: userAuth.uid,
+      });
+
+      // chech if user has unclaimed funds
+      const unclaimedEmailDocRef = doc(db, "unclaimedfunds", email);
+      const unclaimedUsernameDocRef = doc(db, "unclaimedfunds", username);
+
+      const emailSnapshot = await getDoc(unclaimedEmailDocRef);
+      const usernameSnapshot = await getDoc(unclaimedUsernameDocRef);
+
+      let balance = 0;
+      let transactions = [];
+
+      if (emailSnapshot?.exists()) {
+        balance = balance + emailSnapshot.data()?.balance || 0;
+        transactions = [
+          ...transactions,
+          ...(emailSnapshot.data()?.transactions || []),
+        ];
+
+        await deleteDoc(doc(db, "unclaimedfunds", email));
+      }
+
+      if (usernameSnapshot?.exists()) {
+        balance = balance + usernameSnapshot.data()?.balance || 0;
+        transactions = [
+          ...transactions,
+          ...(usernameSnapshot.data()?.transactions || []),
+        ];
+
+        await deleteDoc(doc(db, "unclaimedfunds", username));
+      }
+
+      await updateDoc(userDocRef, {
+        balance: balance,
+        transactions: transactions,
+      });
+    } catch (error) {
+      console.log("error creating the user", error.message);
+    }
+  }
+
+  return userDocRef;
+};
+
+// get user details
+
+export const getUserDetails = async (userAuth, setUserdata) => {
+  if (!userAuth) return;
+
+  const userDocRef = doc(db, "users", userAuth.uid);
+
+  const userSnapshot = await getDoc(userDocRef);
+
+  if (userSnapshot.exists()) {
+    console.log(userSnapshot.data());
+    setUserdata(userSnapshot.data());
+  }
+
+  return userDocRef;
+};
+
+export const fundAccount = async (
+  userAuth,
+  setUserdata,
+  amount,
+  setloading,
+  defaultValue,
+  setFormField
+) => {
+  setloading("loading");
+  if (!userAuth) return;
+
+  const userDocRef = doc(db, "users", userAuth.uid);
+
+  if (Number(amount) < 0 || Number(amount) == 0) {
+    alert("Pelase input a valid amount");
+    setloading("loaded");
+    return;
+  }
+
+  try {
+    const userSnapshot = await getDoc(userDocRef);
+
+    if (userSnapshot.exists()) {
+      await updateDoc(userDocRef, {
+        balance: Number(amount) + (userSnapshot.data()?.balance || 0),
+        transactions: arrayUnion({
+          date: new Date(),
+          name: userSnapshot.data()?.username,
+          amount: Number(amount),
+        }),
+      });
+    }
+
+    alert("Wallet Funded Sucessfully");
+  } catch (err) {
+    console.log(err);
+  }
+  setFormField(defaultValue);
+
+  setloading("loaded");
+};
+
+const checkIfEmail = (addressToSend) =>
+  addressToSend.split("").includes("@")
+    ? where("email", "==", addressToSend)
+    : where("username", "==", addressToSend);
+
+const isEmail = (addressToSend) => addressToSend.split("").includes("@");
+
+export const internalTransfer = async (
+  userAuth,
+  setUserdata,
+  addressToSend,
+  amount,
+  setloading,
+  defaultValue,
+  setFormField
+) => {
+  setloading("loading");
+  if (!userAuth) return;
+
+  const userDocRef = doc(db, "users", userAuth.uid);
+
+  if (Number(amount) < 0 || Number(amount) == 0) {
+    alert("Pelase input a valid amount");
+    setloading("loaded");
+    return;
+  }
+
+  try {
+    const userSnapshot = await getDoc(userDocRef);
+
+    if (userSnapshot.exists()) {
+      // check if user has that amount in their wallet
+      if (userSnapshot.data()?.balance < Number(amount)) {
+        alert("Insufficient funds to make this transfer");
+        setloading("loaded");
+        return;
+      }
+
+      // sender
+      await updateDoc(userDocRef, {
+        balance: (userSnapshot.data()?.balance || 0) - Number(amount),
+        transactions: arrayUnion({
+          date: new Date(),
+          name: addressToSend,
+          amount: -Number(amount),
+        }),
+      });
+
+      // check if user is in database
+      const userToTransferToRef = doc(db, "unclaimedfunds", addressToSend);
+
+      const userToTransferToSnapshot = await getDoc(userToTransferToRef);
+
+      if (userToTransferToSnapshot.exists()) {
+        alert(
+          "If user does not have an account, Tell user to open an account with this email or username to access the funds"
+        );
+        // receiver
+        await updateDoc(userToTransferToRef, {
+          balance:
+            (userToTransferToSnapshot.data()?.balance || 0) + Number(amount),
+          transactions: arrayUnion({
+            date: new Date(),
+            name: userSnapshot.data()?.username,
+            amount: Number(amount),
+          }),
+        });
+      } else {
+        // create a user with that email and balance
+        await setDoc(userToTransferToRef, {
+          balance: Number(amount),
+          transactions: [
+            {
+              date: new Date(),
+              name: userSnapshot.data()?.username,
+              amount: Number(amount),
+            },
+          ],
+        });
+      }
+
+      alert("Transfer Sucessful");
+
+      // setUserdata();
+    }
+  } catch (err) {
+    console.log(err);
+  }
+
+  setFormField(defaultValue);
+
+  setloading("loaded");
+
+  // confirm user has that amount in their wallet
+  // check if user has an account if not still permit the transfer but after telling user
+};
+
+export const transferToChimoney = () => {};
+
+export const reclaimFundsEmail = async (
+  userDocRef,
+  email,
+  username,
+
+  emailData
+) => {
+  // chech if user has unclaimed funds
+
+  await updateDoc(userDocRef, {
+    balance: increment(emailData?.balance || 0),
+    transactions: arrayUnion(...(emailData?.transactions || [])),
+  });
+
+  await deleteDoc(doc(db, "unclaimedfunds", email));
+};
+
+export const reclaimFundsUserName = async (
+  userDocRef,
+  email,
+  username,
+  usernameData
+) => {
+  // chech if user has unclaimed funds
+
+  await updateDoc(userDocRef, {
+    balance: increment(usernameData?.balance || 0),
+    transactions: arrayUnion(...(usernameData?.transactions || [])),
+  });
+
+  await deleteDoc(doc(db, "unclaimedfunds", username));
+};
