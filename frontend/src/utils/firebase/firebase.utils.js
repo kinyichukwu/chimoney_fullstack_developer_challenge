@@ -339,12 +339,11 @@ export const transferToChimoney = async (
 
         const headers = {
           "Access-Control-Allow-Origin": "*",
-       
         };
 
         // do transfer to chimoney account
         const res = await axios.post(
-          `http://127.0.0.1:3000/chimoney_transfer`,
+          `https://chimoney-fullstack-developer-challenge-22vw.vercel.app/chimoney_transfer`,
           {
             chimoneys: [
               {
