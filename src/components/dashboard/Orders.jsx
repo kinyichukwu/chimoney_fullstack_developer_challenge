@@ -38,7 +38,9 @@ export default function Orders() {
                 </TableCell>
                 <TableCell>{row.name}</TableCell>
                 <TableCell style={{ color: row.amount < 0 && "red" }}>{`${
-                  row.amount > 0 ? "$" + row.amount : "-$" + row.amount
+                  row.amount > 0
+                    ? "$" + row.amount
+                    : "-$" + Math.abs(row.amount)
                 }`}</TableCell>
               </TableRow>
             ))}

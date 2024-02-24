@@ -1,13 +1,14 @@
-import React, { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { ClipLoader } from "react-spinners";
 import AuthInfo from "../components/auth/auth_info";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Input } from "../components/auth/input";
 import { getName } from "../utils/helper";
 import {
   createAuthUserWithEmailAndPassword,
   createUserDocumentFromAuth,
 } from "../utils/firebase/firebase.utils";
+import { UserContext } from "../contexts/user.context";
 
 const defaultValue = {
   username: "",
@@ -19,6 +20,16 @@ const defaultValue = {
 const SignUp = () => {
   const [state, setstate] = useState("unloaded");
   const [formField, setFormField] = useState(defaultValue);
+
+  const { currentUser, userDetails } = useContext(UserContext);
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (currentUser) {
+      navigate("/");
+    }
+  }, [currentUser]);
 
   const resetFormFields = () => {
     setFormField(defaultValue);
@@ -88,6 +99,7 @@ const SignUp = () => {
             {Object.keys(formField).map((key) => {
               return (
                 <Input
+                  key={key}
                   name={getName(key)}
                   type={
                     key == "password" || key == "confirm_password"

@@ -1,10 +1,11 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useContext, useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { ClipLoader } from "react-spinners";
 import { Input } from "../components/auth/input";
 import { getName } from "../utils/helper";
 import AuthInfo from "../components/auth/auth_info";
 import { signInAuthUserWithEmailAndPassword } from "../utils/firebase/firebase.utils";
+import { UserContext } from "../contexts/user.context";
 
 const defaultValue = {
   email_address: "",
@@ -32,6 +33,16 @@ const SignIn = () => {
     }
     setstate("loaded");
   };
+
+  const { currentUser, userDetails } = useContext(UserContext);
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (currentUser) {
+      navigate("/");
+    }
+  }, [currentUser]);
 
   return (
     <div className="flex  min-h-screen">
@@ -64,6 +75,7 @@ const SignIn = () => {
             {Object.keys(formField).map((key) => {
               return (
                 <Input
+                  key={key}
                   name={getName(key)}
                   type={key == "password" ? "password" : "text"}
                   value={formField[key]}

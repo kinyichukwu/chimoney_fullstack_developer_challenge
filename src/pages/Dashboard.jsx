@@ -23,6 +23,8 @@ import Orders from "../components/dashboard/Orders";
 import Fund from "../components/dashboard/Fund";
 import Send from "../components/dashboard/Send";
 import { UserContext } from "../contexts/user.context";
+import { useNavigate } from "react-router-dom";
+import { signOutUser } from "../utils/firebase/firebase.utils";
 
 const drawerWidth = 240;
 
@@ -75,7 +77,15 @@ const defaultTheme = createTheme();
 
 export default function Dashboard() {
   const [open, setOpen] = React.useState(false);
-  const { userDetails } = React.useContext(UserContext);
+  const { currentUser, userDetails } = React.useContext(UserContext);
+  const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (!currentUser) {
+      navigate("/signup");
+    }
+  }, [currentUser]);
+
   const toggleDrawer = () => {
     setOpen(!open);
   };
@@ -113,11 +123,14 @@ export default function Dashboard() {
               Welcome, {userDetails?.username || "" + "."}
             </Typography>
 
-            <IconButton color="inherit">
-              <Badge badgeContent={4} color="primary">
-                <NotificationsIcon />
-              </Badge>
-            </IconButton>
+            <p
+              className="text-white font-medium cursor-pointer"
+              onClick={() => {
+                signOutUser();
+              }}
+            >
+              logout
+            </p>
           </Toolbar>
         </AppBar>
 
