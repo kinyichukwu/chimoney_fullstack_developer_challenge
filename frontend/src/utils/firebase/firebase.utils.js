@@ -26,6 +26,7 @@ import {
   Firestore,
   increment,
 } from "firebase/firestore";
+import axios from "axios";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDLqF47sS8H9DPomhwYlu693OOAgP8VhuM",
@@ -290,7 +291,88 @@ export const internalTransfer = async (
   // check if user has an account if not still permit the transfer but after telling user
 };
 
-export const transferToChimoney = () => {};
+export const transferToChimoney = async (
+  userAuth,
+  setUserdata,
+  addressToSend,
+  amount,
+  setloading,
+  defaultValue,
+  setFormField
+) => {
+  setloading("loading");
+  if (!userAuth) return;
+
+  const userDocRef = doc(db, "users", userAuth.uid);
+
+  if (Number(amount) < 0 || Number(amount) == 0) {
+    alert("Pelase input a valid amount");
+    setloading("loaded");
+    return;
+  }
+
+  try {
+    const userSnapshot = await getDoc(userDocRef);
+
+    if (userSnapshot.exists()) {
+      // check if user has that amount in their wallet
+      if (userSnapshot.data()?.balance < Number(amount)) {
+        alert("Insufficient funds to make this transfer");
+        setloading("loaded");
+        return;
+      }
+
+      if (
+        window.confirm(
+          `You are about to transfer to a chimoney account, please confirm the email: ${addressToSend}?`
+        )
+      ) {
+        // sender
+        await updateDoc(userDocRef, {
+          balance: (userSnapshot.data()?.balance || 0) - Number(amount),
+          transactions: arrayUnion({
+            date: new Date(),
+            name: `${addressToSend}-chimoney`,
+            amount: -Number(amount),
+          }),
+        });
+
+        const headers = {
+          "Access-Control-Allow-Origin": "*",
+       
+        };
+
+        // do transfer to chimoney account
+        const res = await axios.post(
+          `http://127.0.0.1:3000/chimoney_transfer`,
+          {
+            chimoneys: [
+              {
+                email: addressToSend,
+                twitter: "",
+                valueInUSD: Number(amount),
+                phone: "",
+              },
+            ],
+          },
+          { headers }
+        );
+
+        console.log(res, "res");
+
+        alert("Transfer Sucessful");
+      }
+
+      // setUserdata();
+    }
+  } catch (err) {
+    console.log(err);
+  }
+
+  setFormField(defaultValue);
+
+  setloading("loaded");
+};
 
 export const reclaimFundsEmail = async (
   userDocRef,

@@ -6,7 +6,7 @@ import { Input } from "../auth/input";
 import { getName } from "../../utils/helper";
 import { ClipLoader } from "react-spinners";
 import { UserContext } from "../../contexts/user.context";
-import { internalTransfer } from "../../utils/firebase/firebase.utils";
+import { internalTransfer, transferToChimoney } from "../../utils/firebase/firebase.utils";
 
 function preventDefault(event) {
   event.preventDefault();
@@ -78,7 +78,22 @@ const Send = () => {
             >
               Transfer to user
             </Link>
-            <Link color="#00D871" href="#" onClick={preventDefault}>
+            <Link
+              color="#00D871"
+              href="#"
+              onClick={(e) => {
+                preventDefault(e);
+                transferToChimoney(
+                  currentUser,
+                  setUserDetails,
+                  formField.user_details,
+                  formField.transfer_amount,
+                  setstate,
+                  defaultValue,
+                  setFormField
+                );
+              }}
+            >
               Transfer to chimoney
             </Link>
           </div>
