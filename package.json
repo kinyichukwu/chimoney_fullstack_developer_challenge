@@ -1,0 +1,29 @@
+{
+  "name": "chimoney_fullstack_developer_challenge",
+  "version": "1.0.0",
+    "scripts": {
+      "install:frontend": "cd frontend && npm install",
+      "install:backend": "cd backend && npm install",
+      "start:frontend": "cd frontend && npm run dev",
+      "start:backend": "cd backend && nodemon index.js",
+      "install": "npm run install:frontend && npm run install:backend",
+      "start": "concurrently --kill-others \"npm run start:frontend\" \"npm run start:backend\""
+    },
+  "description": "",
+  "main": "index.js",
+  
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kinyichukwu/chimoney_fullstack_developer_challenge.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kinyichukwu/chimoney_fullstack_developer_challenge/issues"
+  },
+  "homepage": "https://github.com/kinyichukwu/chimoney_fullstack_developer_challenge#readme",
+  "dependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
