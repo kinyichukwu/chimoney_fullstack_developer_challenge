@@ -131,37 +131,7 @@ const SignUp = () => {
               </button>
             </div>
 
-            <div className="relative flex gap-x-3">
-              <div className="flex h-6 items-center">
-                <input
-                  name="comments"
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-gray-300 "
-                />
-              </div>
-              <div className="text-sm leading-6">
-                <p className="text-gray">
-                  Get notified when someones posts a comment on a posting.
-                </p>
-              </div>
-            </div>
-
-            <div className="relative flex gap-x-3">
-              <div className="flex h-6 items-center">
-                <input
-                  name="comments"
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-gray-300 "
-                />
-              </div>
-              <div className="text-sm leading-6">
-                <p className="text-gray">
-                  I agree with{" "}
-                  <a className=" text-blue-600">Terms of Service</a> and{" "}
-                  <a className=" text-blue-600">Privacy Policy</a>.
-                </p>
-              </div>
-            </div>
+          
           </form>
         </div>
       </div>
