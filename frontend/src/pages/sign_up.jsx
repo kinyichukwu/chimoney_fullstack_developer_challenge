@@ -47,6 +47,7 @@ const SignUp = () => {
 
     if (password.length < 8) {
       alert("Please input a longer password (8+)");
+      return;
     }
 
     try {
@@ -130,8 +131,6 @@ const SignUp = () => {
                 )}
               </button>
             </div>
-
-          
           </form>
         </div>
       </div>
