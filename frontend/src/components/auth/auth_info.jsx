@@ -10,9 +10,10 @@ const AuthInfo = () => {
 
       <div className="pl-[5.4%] pr-[4.6%]">
         <p className="text-white font-bold text-5xl">
-          A software that is trained on{" "}
+          Make Value move!
           <span className="text-[#00D871]">
-            how you talk, communicate and respond to everything
+            {" "}
+            Utilizign the power of Chimoney
           </span>{" "}
         </p>
       </div>
