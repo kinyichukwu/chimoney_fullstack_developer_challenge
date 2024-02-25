@@ -24,7 +24,7 @@ import Fund from "../components/dashboard/Fund";
 import Send from "../components/dashboard/Send";
 import { UserContext } from "../contexts/user.context";
 import { useNavigate } from "react-router-dom";
-import { signOutUser } from "../utils/firebase/firebase.utils";
+import { getUserDetails, signOutUser } from "../utils/firebase/firebase.utils";
 
 const drawerWidth = 240;
 
@@ -77,12 +77,15 @@ const defaultTheme = createTheme();
 
 export default function Dashboard() {
   const [open, setOpen] = React.useState(false);
-  const { currentUser, userDetails } = React.useContext(UserContext);
+  const { currentUser, userDetails, setUserDetails } =
+    React.useContext(UserContext);
   const navigate = useNavigate();
 
   React.useEffect(() => {
     if (!currentUser) {
       navigate("/signup");
+    } else {
+      getUserDetails(currentUser, setUserDetails);
     }
   }, [currentUser]);
 
